@@ -32,6 +32,8 @@ namespace HydraLanguagePackage
             {
                 tokenInfo.Type = TokenType.Unknown;
             }
+
+            return true;
         }
     }
 }

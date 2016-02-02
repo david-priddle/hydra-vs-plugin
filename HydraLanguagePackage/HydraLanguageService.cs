@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.Package;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace HydraLanguagePackage
@@ -7,6 +8,7 @@ namespace HydraLanguagePackage
     class HydraLanguageService : LanguageService
     {
         private LanguagePreferences m_LanguagePreferences;
+        private HydraVsScanner m_HydraVsScanner;
 
         public override LanguagePreferences GetLanguagePreferences()
         {
@@ -22,19 +24,24 @@ namespace HydraLanguagePackage
 
         public override IScanner GetScanner(IVsTextLines buffer)
         {
-            throw new NotImplementedException();
+            if (m_HydraVsScanner == null)
+            {
+                m_HydraVsScanner = new HydraVsScanner(buffer);
+            }
+
+            return m_HydraVsScanner;
         }
 
         public override AuthoringScope ParseSource(ParseRequest req)
         {
-            throw new NotImplementedException();
+            return new HydraAuthoringScope();
         }
 
         public override string GetFormatFilterList()
         {
-            throw new NotImplementedException();
+            return "*.hy";
         }
 
-        public override string Name { get; }
+        public override string Name => "Hydra";
     }
 }
