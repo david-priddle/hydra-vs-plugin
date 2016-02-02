@@ -41,15 +41,15 @@ namespace HydraLanguagePackage
     [Guid(HydraLanguagePackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideService(typeof(HydraLanguageService), ServiceName = "Hydra language service")]
-    [ProvideLanguageService(typeof(HydraLanguageService), "Hydra", 106, EnableCommenting = true, MatchBraces = true)]
+    [ProvideLanguageService(typeof(HydraLanguageService), "Hydra", 0, EnableCommenting = true, MatchBraces = true, RequestStockColors = true)]
     [ProvideLanguageExtension(typeof(HydraLanguageService), ".hy")]
-    public sealed class HydraLanguagePackage : Package, IOleComponent
+    public sealed class HydraLanguagePackage : Package
     {
         /// <summary>
         /// HydraLanguagePackage GUID string.
         /// </summary>
         public const string PackageGuidString = "6f3c5ec9-ede1-4212-a846-976e2068ce77";
-        private uint m_componentID;
+        private uint m_ComponentId;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HydraLanguagePackage"/> class.
@@ -74,112 +74,22 @@ namespace HydraLanguagePackage
             var langService = new HydraLanguageService();
             langService.SetSite(this);
             serviceContainer.AddService(typeof(HydraLanguageService), langService, true);
-
-            // Register a timer to call our language service during
-            // idle periods.
-            IOleComponentManager mgr = GetService(typeof(SOleComponentManager))
-                                       as IOleComponentManager;
-            if (m_componentID == 0 && mgr != null)
-            {
-                OLECRINFO[] crinfo = new OLECRINFO[1];
-                crinfo[0].cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO));
-                crinfo[0].grfcrf = (uint)_OLECRF.olecrfNeedIdleTime |
-                                              (uint)_OLECRF.olecrfNeedPeriodicIdleTime;
-                crinfo[0].grfcadvf = (uint)_OLECADVF.olecadvfModal |
-                                              (uint)_OLECADVF.olecadvfRedrawOff |
-                                              (uint)_OLECADVF.olecadvfWarningsOff;
-                crinfo[0].uIdleTimeInterval = 1000;
-                int hr = mgr.FRegisterComponent(this, crinfo, out m_componentID);
-            }
         }
-
-
 
         protected override void Dispose(bool disposing)
         {
-            if (m_componentID != 0)
+            if (m_ComponentId != 0)
             {
                 IOleComponentManager mgr = GetService(typeof(SOleComponentManager))
                                            as IOleComponentManager;
                 if (mgr != null)
                 {
-                    int hr = mgr.FRevokeComponent(m_componentID);
+                    int hr = mgr.FRevokeComponent(m_ComponentId);
                 }
-                m_componentID = 0;
+                m_ComponentId = 0;
             }
 
             base.Dispose(disposing);
         }
-
-
-        #region IOleComponent Members
-
-        public int FDoIdle(uint grfidlef)
-        {
-            bool bPeriodic = (grfidlef & (uint)_OLEIDLEF.oleidlefPeriodic) != 0;
-            // Use typeof(HydraLanguageService) because we need to reference the GUID for our language service.
-            LanguageService service = GetService(typeof(HydraLanguageService)) as LanguageService;
-
-            service?.OnIdle(bPeriodic);
-
-            return 0;
-        }
-
-        public int FContinueMessageLoop(uint uReason,
-                                        IntPtr pvLoopData,
-                                        MSG[] pMsgPeeked)
-        {
-            return 1;
-        }
-
-        public int FPreTranslateMessage(MSG[] pMsg)
-        {
-            return 0;
-        }
-
-        public int FQueryTerminate(int fPromptUser)
-        {
-            return 1;
-        }
-
-        public int FReserved1(uint dwReserved,
-                              uint message,
-                              IntPtr wParam,
-                              IntPtr lParam)
-        {
-            return 1;
-        }
-
-        public IntPtr HwndGetWindow(uint dwWhich, uint dwReserved)
-        {
-            return IntPtr.Zero;
-        }
-
-        public void OnActivationChange(IOleComponent pic,
-                                       int fSameComponent,
-                                       OLECRINFO[] pcrinfo,
-                                       int fHostIsActivating,
-                                       OLECHOSTINFO[] pchostinfo,
-                                       uint dwReserved)
-        {
-        }
-
-        public void OnAppActivate(int fActive, uint dwOtherThreadID)
-        {
-        }
-
-        public void OnEnterState(uint uStateID, int fEnter)
-        {
-        }
-
-        public void OnLoseActivation()
-        {
-        }
-
-        public void Terminate()
-        {
-        }
-
-        #endregion
     }
 }

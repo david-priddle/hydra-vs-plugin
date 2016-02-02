@@ -18,15 +18,24 @@ namespace HydraLanguagePackage
         public void SetSource(string source, int offset)
         {
             m_HydraScanner.SetSource(source, offset);
+            m_HydraScanner.NextToken();
         }
 
         public bool ScanTokenAndProvideInfoAboutIt(TokenInfo tokenInfo, ref int state)
         {
             var token = m_HydraScanner.NextToken();
 
+            if (token.TokenType == HydraTokenType.EOF)
+            {
+                return false;
+            }
+
             if (token.TokenType == HydraTokenType.ID)
             {
                 tokenInfo.Type = TokenType.Identifier;
+                tokenInfo.Color = TokenColor.Identifier;
+                tokenInfo.StartIndex = token.Offset;
+                tokenInfo.EndIndex = token.Offset + token.Text.Length;
             }
             else
             {
