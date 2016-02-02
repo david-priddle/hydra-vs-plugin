@@ -52,7 +52,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="HydraLanguageService.cs" />
-    <Compile Include="HydraScanner.cs" />
+    <Compile Include="HydraVsScanner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
