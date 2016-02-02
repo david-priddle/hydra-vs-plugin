@@ -1,0 +1,3 @@
+[submodule "Compiler"]
+	path = Compiler
+	url = git@github.com:david-priddle/hydra-compiler.git
