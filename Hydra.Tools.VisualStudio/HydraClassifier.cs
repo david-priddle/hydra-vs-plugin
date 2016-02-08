@@ -16,18 +16,13 @@ namespace Hydra.Tools.VisualStudio
     /// </summary>
     internal class HydraClassifier : IClassifier
     {
-        /// <summary>
-        /// Classification type.
-        /// </summary>
-        private readonly IClassificationType classificationType;
+        private readonly HydraClassifierProvider m_Registry;
+        private readonly ITextBuffer m_Buffer;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HydraClassifier"/> class.
-        /// </summary>
-        /// <param name="registry">Classification registry.</param>
-        internal HydraClassifier(IClassificationTypeRegistryService registry)
+        public HydraClassifier(HydraClassifierProvider registry, ITextBuffer buffer)
         {
-            this.classificationType = registry.GetClassificationType("HydraClassifier");
+            m_Registry = registry;
+            m_Buffer = buffer;
         }
 
         #region IClassifier
@@ -59,7 +54,7 @@ namespace Hydra.Tools.VisualStudio
         {
             var result = new List<ClassificationSpan>()
             {
-                new ClassificationSpan(new SnapshotSpan(span.Snapshot, new Span(span.Start, span.Length)), this.classificationType)
+                new ClassificationSpan(new SnapshotSpan(span.Snapshot, new Span(span.Start, span.Length)), m_Registry.Keyword)
             };
 
             return result;

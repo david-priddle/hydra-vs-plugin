@@ -4,7 +4,9 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -18,19 +20,27 @@ namespace Hydra.Tools.VisualStudio
     [ContentType("text")] // This classifier applies to all text files.
     internal class HydraClassifierProvider : IClassifierProvider
     {
-        // Disable "Field is never assigned to..." compiler's warning. Justification: the field is assigned by MEF.
-#pragma warning disable 649
-
         /// <summary>
         /// Classification registry to be used for getting a reference
         /// to the custom classification type later.
         /// </summary>
         [Import]
-        private IClassificationTypeRegistryService classificationRegistry;
+        private IClassificationTypeRegistryService m_ClassificationRegistry;
 
-#pragma warning restore 649
+        public IClassificationType Keyword { get; private set; }
+        private Dictionary<TokenCategory, IClassificationType> m_CategoryMap;
 
-        #region IClassifierProvider
+        private Dictionary<TokenCategory, IClassificationType> FillCategoryMap(IClassificationTypeRegistryService registry)
+        {
+            var categoryMap = new Dictionary<TokenCategory, IClassificationType>
+            {
+                [TokenCategory.Keyword] = Keyword = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword),
+                [TokenCategory.Directive] = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword),
+                [TokenCategory.Identifier] = registry.GetClassificationType(PredefinedClassificationTypeNames.Identifier)
+            };
+
+            return categoryMap;
+        }
 
         /// <summary>
         /// Gets a classifier for the given text buffer.
@@ -39,9 +49,19 @@ namespace Hydra.Tools.VisualStudio
         /// <returns>A classifier for the text buffer, or null if the provider cannot do so in its current state.</returns>
         public IClassifier GetClassifier(ITextBuffer buffer)
         {
-            return buffer.Properties.GetOrCreateSingletonProperty<HydraClassifier>(creator: () => new HydraClassifier(this.classificationRegistry));
-        }
+            if (m_CategoryMap == null)
+            {
+                m_CategoryMap = FillCategoryMap(m_ClassificationRegistry);
+            }
 
-        #endregion
+            HydraClassifier res;
+            if (!buffer.Properties.TryGetProperty(typeof(HydraClassifier), out res))
+            {
+                res = new HydraClassifier(this, buffer);
+                buffer.Properties.AddProperty(typeof(HydraClassifier), res);
+            }
+
+            return res;
+        }
     }
 }
