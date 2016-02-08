@@ -6,6 +6,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Hydra.Compiler;
+using Hydra.Compiler.Grammar.Tree;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
@@ -52,12 +55,43 @@ namespace Hydra.Tools.VisualStudio
         /// <returns>A list of ClassificationSpans that represent spans identified to be of this classification.</returns>
         public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)
         {
-            var result = new List<ClassificationSpan>()
+            var result = new List<ClassificationSpan>();
+
+            var snapshot = span.Snapshot;
+            int firstLine = snapshot.GetLineNumberFromPosition(span.Start);
+            int lastLine = snapshot.GetLineNumberFromPosition(span.End);
+
+            for (int lineIndex = firstLine; lineIndex <= lastLine; lineIndex++)
             {
-                new ClassificationSpan(new SnapshotSpan(span.Snapshot, new Span(span.Start, span.Length)), m_Registry.Keyword)
-            };
+                var line = snapshot.GetLineFromLineNumber(lineIndex);
+                var lineText = line.GetText();
+
+                var scanner = new HydraScanner();
+                scanner.SetSource(lineText, 0);
+                scanner.NextToken();
+
+                var token = scanner.NextToken();
+                while (token != null && token.TokenType != HydraTokenType.EOF)
+                {
+                    result.Add(new ClassificationSpan(new SnapshotSpan(snapshot, new Span(token.Offset, token.Text.Length)), ClassifyToken(token)));
+
+                    token = scanner.NextToken();
+                }
+            }
 
             return result;
+        }
+
+        private IClassificationType ClassifyToken(HydraToken token)
+        {
+            switch (token.TokenType)
+            {
+                case HydraTokenType.ID:
+                    return m_Registry.Identifier;
+
+                default:
+                    return m_Registry.Keyword;
+            }
         }
 
         #endregion

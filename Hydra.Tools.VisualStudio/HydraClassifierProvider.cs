@@ -28,6 +28,7 @@ namespace Hydra.Tools.VisualStudio
         private IClassificationTypeRegistryService m_ClassificationRegistry;
 
         public IClassificationType Keyword { get; private set; }
+        public IClassificationType Identifier { get; private set; }
         private Dictionary<TokenCategory, IClassificationType> m_CategoryMap;
 
         private Dictionary<TokenCategory, IClassificationType> FillCategoryMap(IClassificationTypeRegistryService registry)
@@ -36,7 +37,7 @@ namespace Hydra.Tools.VisualStudio
             {
                 [TokenCategory.Keyword] = Keyword = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword),
                 [TokenCategory.Directive] = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword),
-                [TokenCategory.Identifier] = registry.GetClassificationType(PredefinedClassificationTypeNames.Identifier)
+                [TokenCategory.Identifier] = Identifier = registry.GetClassificationType(PredefinedClassificationTypeNames.Identifier)
             };
 
             return categoryMap;
